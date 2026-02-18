@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SamayNyaya AI Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+/* ================= GLOBAL ================= */
+:root{
+    --bg-base:#f4f7fb;
+    --bg-layer:#e8eef8;
+    --surface:rgba(255,255,255,0.82);
+    --surface-strong:rgba(255,255,255,0.94);
+    --text:#182235;
+    --muted:#5d6b82;
+    --line:#d6deeb;
+    --line-soft:#e6ebf4;
+    --accent:#d4a72f;
+    --accent-strong:#bc8f1f;
+    --success:#0f9d8a;
+    --danger:#e04f5f;
+    --warning:#dc8d3d;
+    --radius:18px;
+    --shadow:0 20px 45px rgba(15,23,42,.09);
+    --transition:all .26s ease;
+}
+
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    font-family:"IBM Plex Sans","Segoe UI",sans-serif;
+    color:var(--text);
+    background:
+        radial-gradient(circle at 8% 8%, #fef7db 0%, transparent 28%),
+        radial-gradient(circle at 92% 18%, #dfeaf9 0%, transparent 35%),
+        linear-gradient(140deg,var(--bg-base),var(--bg-layer));
+    transition:var(--transition);
+    min-height:100vh;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar{
+    position:fixed;
+    width:240px;
+    height:100vh;
+    background:linear-gradient(180deg,#0f172a,#0a1325);
+    color:white;
+    padding:26px 16px;
+    border-right:1px solid rgba(255,255,255,.08);
+}
+
+.logo{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.logo img{
+    max-width:150px;
+    height:auto;
+    object-fit:contain;
+}
+
+.sidebar ul{
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+.sidebar li{
+    padding:12px 14px;
+    margin:7px 0;
+    border-radius:12px;
+    cursor:pointer;
+    transition:var(--transition);
+    font-weight:500;
+    color:#dbe7ff;
+}
+
+.sidebar li:hover,
+.sidebar .active{
+    background:linear-gradient(90deg,var(--accent),#ebc970);
+    color:#141a25;
+    transform:translateX(2px);
+}
+
+/* ================= MAIN ================= */
+.main{margin-left:240px}
+
+/* HEADER */
+header{
+    background:var(--surface-strong);
+    backdrop-filter:blur(12px);
+    padding:18px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid var(--line-soft);
+    position:sticky;
+    top:0;
+    z-index:10;
+}
+
+header h1{
+    font-family:"Sora","IBM Plex Sans",sans-serif;
+    font-size:20px;
+    font-weight:600;
+    letter-spacing:.15px;
+    margin:0;
+}
+
+/* AI STATUS */
+.ai-status{
+    font-weight:600;
+    color:var(--success);
+}
+
+.pulse{
+    height:9px;
+    width:9px;
+    background:var(--success);
+    border-radius:50%;
+    display:inline-block;
+    margin-right:7px;
+    animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+0%{box-shadow:0 0 0 0 rgba(15,157,138,.7)}
+70%{box-shadow:0 0 0 10px rgba(15,157,138,0)}
+100%{box-shadow:0 0 0 0 rgba(15,157,138,0)}
+}
+
+/* ================= CONTAINER ================= */
+.container{padding:26px}
+
+.hidden{display:none}
+
+/* ================= CARDS ================= */
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:18px;
+}
+
+.card{
+    background:var(--surface);
+    backdrop-filter:blur(12px);
+    padding:20px;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    transition:var(--transition);
+    border:1px solid rgba(255,255,255,.7);
+    border-top:4px solid var(--accent);
+}
+
+.card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 24px 45px rgba(15,23,42,.14);
+}
+
+.card h3{
+    margin:0;
+    font-weight:500;
+    color:var(--muted);
+    letter-spacing:.2px;
+}
+
+.card h2{
+    margin-top:10px;
+    margin-bottom:0;
+    font-family:"Sora","IBM Plex Sans",sans-serif;
+    font-size:30px;
+    font-weight:700;
+}
+
+/* ================= PANELS ================= */
+.panel{
+    background:var(--surface);
+    backdrop-filter:blur(12px);
+    padding:22px;
+    border-radius:var(--radius);
+    margin-top:22px;
+    box-shadow:var(--shadow);
+    border:1px solid rgba(255,255,255,.72);
+}
+
+.panel h3{
+    margin-top:0;
+    margin-bottom:14px;
+    font-family:"Sora","IBM Plex Sans",sans-serif;
+    font-size:18px;
+    letter-spacing:.2px;
+}
+
+.panel h4{
+    margin:4px 0 12px;
+    font-size:14px;
+    color:var(--muted);
+    letter-spacing:.18px;
+}
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:14px;
+}
+
+.kpi{
+    background:linear-gradient(180deg,#f8fbff,#edf3fb);
+    border:1px solid var(--line-soft);
+    border-radius:13px;
+    padding:14px;
+    text-align:center;
+}
+
+.kpi strong{
+    display:block;
+    font-size:24px;
+    margin-top:4px;
+    font-family:"Sora","IBM Plex Sans",sans-serif;
+}
+
+.schedule-list{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.schedule-list th,
+.schedule-list td{
+    border-bottom:1px solid var(--line);
+    padding:10px;
+    text-align:left;
+}
+
+.input-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:12px;
+    margin-bottom:14px;
+}
+
+.input-grid .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.input-grid label{
+    font-size:13px;
+    font-weight:600;
+    color:var(--muted);
+}
+
+.input-grid input,
+.input-grid select{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+    background:#fbfdff;
+    font:inherit;
+    transition:var(--transition);
+}
+
+.input-grid input:focus,
+.input-grid select:focus{
+    outline:none;
+    border-color:#9fb7e9;
+    box-shadow:0 0 0 3px rgba(80,126,211,.14);
+}
+
+.primary-btn{
+    border:none;
+    border-radius:12px;
+    padding:10px 18px;
+    font-weight:600;
+    cursor:pointer;
+    background:linear-gradient(92deg,var(--accent),#ecc86b);
+    color:#17202e;
+    transition:var(--transition);
+}
+
+.primary-btn:hover{
+    transform:translateY(-1px);
+    filter:saturate(1.08);
+}
+
+/* GRID */
+.flex{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:22px;
+}
+
+/* ================= TABLE ================= */
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+    border:1px solid var(--line-soft);
+    border-radius:12px;
+    overflow:hidden;
+}
+
+th{
+    background:#14233b;
+    color:white;
+    padding:12px;
+    font-weight:600;
+    letter-spacing:.2px;
+}
+
+td{
+    padding:11px;
+    text-align:center;
+    border-bottom:1px solid var(--line-soft);
+}
+
+tr:nth-child(even){background:#f7faff}
+tr:hover{
+    background:#eaf1ff;
+    transition:var(--transition);
+}
+
+.high{color:var(--danger);font-weight:700}
+.medium{color:var(--warning);font-weight:700}
+.low{color:var(--success);font-weight:700}
+
+/* ALERT BOX */
+ul li{
+    background:#fff6f6;
+    border:1px solid #ffd7db;
+    border-left:5px solid var(--danger);
+    padding:10px;
+    margin:8px 0;
+    border-radius:10px;
+    list-style:none;
+    color:#5a2931;
+}
+
+/* ================= DARK MODE ================= */
+.dark{
+    --bg-base:#080f1f;
+    --bg-layer:#0a1630;
+    --surface:rgba(17,31,54,.88);
+    --surface-strong:rgba(11,25,45,.94);
+    --text:#e8eefc;
+    --muted:#aab9d7;
+    --line:#2d3e5d;
+    --line-soft:#243350;
+    --shadow:0 18px 36px rgba(0,0,0,.35);
+    background:
+        radial-gradient(circle at 10% 14%, rgba(245,190,87,.12) 0%, transparent 34%),
+        radial-gradient(circle at 89% 10%, rgba(92,150,255,.15) 0%, transparent 30%),
+        linear-gradient(145deg,var(--bg-base),var(--bg-layer));
+    color:white;
+}
+
+.dark header,
+.dark .panel,
+.dark .card{
+    background:var(--surface);
+    color:white;
+}
+
+.dark tr:nth-child(even){
+    background:#152843;
+}
+
+.dark .kpi{
+    background:linear-gradient(180deg,#132542,#0f1f38);
+    border-color:#284165;
+}
+
+.dark .schedule-list th,
+.dark .schedule-list td{
+    border-bottom:1px solid #2a3d5b;
+}
+
+.dark .input-grid input,
+.dark .input-grid select{
+    background:#11213a;
+    color:white;
+    border-color:#304564;
+}
+
+.dark table{
+    border-color:#24344f;
+}
+
+.dark td{
+    border-bottom-color:#24344f;
+}
+
+.dark ul li{
+    background:#39222a;
+    border-color:#663543;
+    color:#ffd3db;
+}
+
+/* MODAL STYLES */
+.modal{
+    display:none;
+    position:fixed;
+    z-index:100;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background-color:rgba(0,0,0,0.5);
+    animation:fadeIn .3s ease;
+}
+
+.modal-content{
+    background:var(--surface-strong);
+    margin:5% auto;
+    padding:26px;
+    border:1px solid rgba(255,255,255,.7);
+    border-radius:var(--radius);
+    width:90%;
+    max-width:500px;
+    box-shadow:0 30px 60px rgba(0,0,0,.3);
+    animation:slideIn .3s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0}
+    to{opacity:1}
+}
+
+@keyframes slideIn{
+    from{transform:translateY(-50px);opacity:0}
+    to{transform:translateY(0);opacity:1}
+}
+
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+}
+
+.modal-header h2{
+    margin:0;
+    font-family:"Sora","IBM Plex Sans",sans-serif;
+    font-size:22px;
+    font-weight:700;
+}
+
+.close-btn{
+    background:none;
+    border:none;
+    font-size:28px;
+    font-weight:bold;
+    cursor:pointer;
+    color:var(--text);
+    transition:var(--transition);
+}
+
+.close-btn:hover{
+    color:var(--danger);
+}
+
+.add-case-btn{
+    background:linear-gradient(92deg,var(--accent),#ecc86b);
+    border:none;
+    border-radius:10px;
+    padding:8px 14px;
+    font-size:20px;
+    cursor:pointer;
+    transition:var(--transition);
+}
+
+.add-case-btn:hover{
+    transform:scale(1.1);
+    filter:saturate(1.1);
+}
+
+.dark .modal-content{
+    background:var(--surface);
+    color:white;
+}
+
+.dark .close-btn{
+    color:var(--muted);
+}
+
+.dark .close-btn:hover{
+    color:var(--danger);
+}
+
+/* RESPONSIVE */
+@media(max-width:1000px){
+    .flex{grid-template-columns:1fr;}
+    .cards{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));}
+}
+
+@media(max-width:860px){
+    .sidebar{
+        position:relative;
+        width:100%;
+        height:auto;
+        padding:14px;
+    }
+
+    .logo{
+        margin-bottom:12px;
+    }
+
+    .sidebar ul{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .sidebar li{
+        margin:0;
+    }
+
+    .main{
+        margin-left:0;
+    }
+
+    header{
+        padding:16px;
+        flex-direction:column;
+        align-items:flex-start;
+        gap:8px;
+    }
+
+    .container{
+        padding:16px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+<div class="logo"><img src="image.png" alt="SamayNyaya AI Logo"></div>
+<ul>
+<li class="active" data-section="dashboard" onclick="setSection(this)">📊 Dashboard</li>
+<li data-section="case-management" onclick="setSection(this)">📂 Case Management</li>
+<li data-section="lawyer-monitor" onclick="setSection(this)">👨‍⚖ Lawyer Monitor</li>
+<li data-section="ai-scheduling" onclick="setSection(this)">🤖 AI Scheduling</li>
+<li data-section="analytics" onclick="setSection(this)">📈 Analytics</li>
+<li onclick="toggleMode()">🌙 Toggle Mode</li>
+</ul>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<header>
+<h1>Intelligent Court Case Scheduling System</h1>
+<div class="ai-status"><span class="pulse"></span>AI Engine Active</div>
+</header>
+
+<div class="container">
+
+<section id="section-dashboard">
+
+<!-- CARDS -->
+<div class="cards">
+<div class="card"><h3>Total Pending</h3><h2 id="pending">0</h2></div>
+<div class="card"><h3>High Priority</h3><h2 id="highCases">0</h2></div>
+<div class="card"><h3>Delayed >2 yrs</h3><h2 id="delayed">0</h2></div>
+<div class="card"><h3>Avg Adjournments</h3><h2 id="avgAdj">0</h2></div>
+</div>
+
+<div class="flex">
+
+<div class="panel">
+<h3>AI Priority Case Queue</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th><th>Type</th><th>Age</th>
+<th>Adj</th><th>Lawyer</th>
+<th>Priority</th><th>Risk</th>
+</tr>
+</thead>
+<tbody id="caseTable"></tbody>
+</table>
+</div>
+
+<div class="panel">
+<h3>🤖 Smart Recommendation</h3>
+<p id="recommendation">Running AI analysis...</p>
+</div>
+
+</div>
+
+<div class="panel">
+<h3>📊 Case Analytics</h3>
+<canvas id="caseChart"></canvas>
+</div>
+
+<div class="panel">
+<h3>🚨 System Alerts</h3>
+<ul id="alerts"></ul>
+</div>
+
+</section>
+
+<section id="section-case-management" class="hidden">
+<div class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+<h3>📂 Case Management</h3>
+<button class="add-case-btn" onclick="openAddCaseModal()">+ Add Case</button>
+</div>
+<h4>All Cases</h4>
+<table>
+<thead>
+<tr>
+<th>Case ID</th><th>Type</th><th>Age</th><th>Adjournments</th><th>Lawyer Status</th>
+</tr>
+</thead>
+<tbody id="caseManagementTable"></tbody>
+</table>
+</div>
+</section>
+
+<section id="section-lawyer-monitor" class="hidden">
+<div class="panel">
+<h3>👨‍⚖ Lawyer Monitor</h3>
+<table>
+<thead>
+<tr>
+<th>Lawyer State</th><th>Cases</th><th>Avg Age</th><th>Avg Adjournments</th>
+</tr>
+</thead>
+<tbody id="lawyerTable"></tbody>
+</table>
+</div>
+</section>
+
+<section id="section-ai-scheduling" class="hidden">
+<div class="panel">
+<h3>🤖 AI Scheduling</h3>
+<table class="schedule-list">
+<thead>
+<tr>
+<th>Rank</th><th>Case</th><th>Priority</th><th>Recommended Slot</th><th>Reason</th>
+</tr>
+</thead>
+<tbody id="aiScheduleTable"></tbody>
+</table>
+</div>
+</section>
+
+<section id="section-analytics" class="hidden">
+<div class="panel">
+<h3>📈 Analytics</h3>
+<div class="kpi-grid">
+<div class="kpi">Backlog Rate<strong id="kpiBacklog">0%</strong></div>
+<div class="kpi">Lawyer Availability<strong id="kpiAvailability">0%</strong></div>
+<div class="kpi">Mean Priority<strong id="kpiPriority">0</strong></div>
+<div class="kpi">Escalation Risk<strong id="kpiRisk">0%</strong></div>
+</div>
+</div>
+</section>
+
+</div>
+</div>
+
+<!-- ADD CASE MODAL -->
+<div id="addCaseModal" class="modal">
+<div class="modal-content">
+<div class="modal-header">
+<h2>Add New Case</h2>
+<button class="close-btn" onclick="closeAddCaseModal()">&times;</button>
+</div>
+<form id="addCaseForm" onsubmit="submitAddCase(event)">
+<div class="input-grid">
+<div class="field">
+<label for="modalCaseId">Case ID</label>
+<input id="modalCaseId" type="text" placeholder="e.g., C1050" required>
+</div>
+<div class="field">
+<label for="modalCaseType">Case Type</label>
+<select id="modalCaseType" required>
+<option value="">Select Type</option>
+<option>Criminal</option>
+<option>Civil</option>
+<option>Family</option>
+<option>Commercial</option>
+<option>Corporate</option>
+<option>Property</option>
+</select>
+</div>
+<div class="field">
+<label for="modalCaseAge">Case Age (Years)</label>
+<input id="modalCaseAge" type="number" step="0.01" min="0" placeholder="e.g., 2.5" required>
+</div>
+<div class="field">
+<label for="modalAdjournments">Adjournments</label>
+<input id="modalAdjournments" type="number" min="0" placeholder="Enter count" required>
+</div>
+<div class="field">
+<label for="modalLawyerStatus">Lawyer Status</label>
+<select id="modalLawyerStatus" required>
+<option value="">Select Status</option>
+<option>Available</option>
+<option>Absent</option>
+<option>Partially Available</option>
+</select>
+</div>
+</div>
+<div style="display:flex;gap:10px;margin-top:18px;">
+<button type="submit" class="primary-btn" style="flex:1;">Add Case</button>
+<button type="button" class="primary-btn" style="flex:1;background:var(--line);color:var(--text);" onclick="closeAddCaseModal()">Cancel</button>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+
+/* DARK MODE */
+function toggleMode(){
+document.body.classList.toggle("dark");
+}
+
+function setSection(item){
+const section=item.dataset.section;
+document.querySelectorAll(".sidebar li[data-section]").forEach(li=>li.classList.remove("active"));
+item.classList.add("active");
+document.querySelectorAll(".container section").forEach(s=>s.classList.add("hidden"));
+document.getElementById(`section-${section}`).classList.remove("hidden");
+}
+
+/* MODAL FUNCTIONS */
+function openAddCaseModal(){
+document.getElementById("addCaseModal").style.display="block";
+}
+
+function closeAddCaseModal(){
+document.getElementById("addCaseModal").style.display="none";
+document.getElementById("addCaseForm").reset();
+}
+
+function submitAddCase(event){
+event.preventDefault();
+const newCase={
+id:document.getElementById("modalCaseId").value,
+type:document.getElementById("modalCaseType").value,
+age:parseFloat(document.getElementById("modalCaseAge").value),
+adj:parseInt(document.getElementById("modalAdjournments").value),
+lawyer:document.getElementById("modalLawyerStatus").value
+};
+cases.push(newCase);
+updateCaseManagementTable();
+closeAddCaseModal();
+alert("Case added successfully!");
+}
+
+window.onclick=function(event){
+const modal=document.getElementById("addCaseModal");
+if(event.target==modal){
+modal.style.display="none";
+}
+}
+
+/* DATA FROM FLASK */
+const cases = {{ cases | tojson }};
+
+/* AI LOGIC */
+function calculatePriority(c){
+let score=0;
+if(c.age>3)score+=40;
+else if(c.age>1)score+=20;
+score+=c.adj*5;
+if(c.type==="Criminal")score+=25;
+if(c.type==="Family")score+=15;
+if(c.lawyer==="Absent")score+=15;
+return score;
+}
+
+function predictRisk(c){
+if(c.adj>5||c.lawyer==="Absent")return"High";
+if(c.age>2)return"Medium";
+return"Low";
+}
+
+let highCount=0,delayedCount=0,totalAdj=0;
+let tbody=document.getElementById("caseTable");
+
+cases.forEach(c=>{
+let priority=calculatePriority(c);
+let risk=predictRisk(c);
+
+if(priority>80)highCount++;
+if(c.age>2)delayedCount++;
+totalAdj+=c.adj;
+
+tbody.innerHTML+=`
+<tr>
+<td>${c.id}</td>
+<td>${c.type}</td>
+<td>${c.age} yrs</td>
+<td>${c.adj}</td>
+<td>${c.lawyer}</td>
+<td>${priority}</td>
+<td class="${risk.toLowerCase()}">${risk}</td>
+</tr>`;
+});
+
+/* AI RECOMMENDATION */
+let best=cases.map(c=>({...c,priority:calculatePriority(c)}))
+.sort((a,b)=>b.priority-a.priority)[0];
+
+document.getElementById("recommendation").innerHTML=
+`Case <b>${best.id}</b> should be scheduled next.<br>
+✔ Highest AI priority score<br>
+✔ Pending ${best.age} years<br>
+✔ Delay risk detected.`;
+
+/* ALERTS */
+document.getElementById("alerts").innerHTML=
+`<li>${delayedCount} cases older than 2 years</li>
+<li>${highCount} high priority cases detected</li>
+<li>Frequent adjournments increasing backlog risk</li>`;
+
+/* CASE MANAGEMENT */
+function updateCaseManagementTable(){
+const caseManagementTable=document.getElementById("caseManagementTable");
+caseManagementTable.innerHTML="";
+cases.forEach(c=>{
+const risk=predictRisk(c);
+caseManagementTable.innerHTML+=`<tr>
+<td>${c.id}</td>
+<td>${c.type}</td>
+<td>${c.age} yrs</td>
+<td>${c.adj}</td>
+<td class="${risk.toLowerCase()}">${risk} Priority</td>
+</tr>`;
+});
+}
+
+updateCaseManagementTable();
+
+/* LAWYER MONITOR */
+const lawyerGroups=cases.reduce((acc,c)=>{
+if(!acc[c.lawyer])acc[c.lawyer]=[];
+acc[c.lawyer].push(c);
+return acc;
+},{});
+
+const lawyerTable=document.getElementById("lawyerTable");
+Object.entries(lawyerGroups).forEach(([state,list])=>{
+const avgAge=(list.reduce((s,c)=>s+c.age,0)/list.length).toFixed(1);
+const avgAdj=(list.reduce((s,c)=>s+c.adj,0)/list.length).toFixed(1);
+lawyerTable.innerHTML+=`<tr>
+<td>${state}</td>
+<td>${list.length}</td>
+<td>${avgAge} yrs</td>
+<td>${avgAdj}</td>
+</tr>`;
+});
+
+/* AI SCHEDULING */
+const sortedCases=cases
+.map(c=>({...c,priority:calculatePriority(c),risk:predictRisk(c)}))
+.sort((a,b)=>b.priority-a.priority);
+
+const aiScheduleTable=document.getElementById("aiScheduleTable");
+const slots=["09:30 AM","10:15 AM","11:00 AM","12:00 PM","02:00 PM"];
+sortedCases.forEach((c,index)=>{
+const reason=c.risk==="High"?"High delay risk":"Optimize pending time";
+aiScheduleTable.innerHTML+=`<tr>
+<td>#${index+1}</td>
+<td>${c.id}</td>
+<td>${c.priority}</td>
+<td>${slots[index]||"Next Available"}</td>
+<td>${reason}</td>
+</tr>`;
+});
+
+/* ANALYTICS KPI */
+const backlogRate=((delayedCount/cases.length)*100).toFixed(0);
+const availableCount=cases.filter(c=>c.lawyer==="Available").length;
+const availability=((availableCount/cases.length)*100).toFixed(0);
+const meanPriority=(sortedCases.reduce((s,c)=>s+c.priority,0)/sortedCases.length).toFixed(1);
+const highRiskRate=((sortedCases.filter(c=>c.risk==="High").length/cases.length)*100).toFixed(0);
+
+document.getElementById("kpiBacklog").innerText=`${backlogRate}%`;
+document.getElementById("kpiAvailability").innerText=`${availability}%`;
+document.getElementById("kpiPriority").innerText=meanPriority;
+document.getElementById("kpiRisk").innerText=`${highRiskRate}%`;
+
+/* STATS */
+function animate(id,end){
+let c=0;
+let t=setInterval(()=>{
+c++;
+document.getElementById(id).innerText=c;
+if(c>=end)clearInterval(t);
+},18);
+}
+
+animate("pending",cases.length);
+animate("highCases",highCount);
+animate("delayed",delayedCount);
+animate("avgAdj",(totalAdj/cases.length).toFixed(1));
+
+/* CHART */
+new Chart(document.getElementById("caseChart"),{
+type:"bar",
+data:{
+labels:["Criminal","Civil","Family"],
+datasets:[{
+label:"Cases",
+data:[
+cases.filter(c=>c.type==="Criminal").length,
+cases.filter(c=>c.type==="Civil").length,
+cases.filter(c=>c.type==="Family").length
+]
+}]
+}
+});
+
+</script>
+
+</body>
+</html>
